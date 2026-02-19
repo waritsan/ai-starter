@@ -52,6 +52,7 @@ module web 'br/public:avm/res/web/static-site:0.3.0' = {
   scope: rg
   params: {
     name: !empty(webServiceName) ? webServiceName : '${abbrs.webStaticSites}web-${resourceToken}'
+    sku: 'Free'
     location: location
     provider: 'Custom'
     tags: union(tags, { 'azd-service-name': 'web' })
@@ -151,6 +152,7 @@ module storage 'br/public:avm/res/storage/storage-account:0.8.3' = {
   scope: rg
   params: {
     name: !empty(storageAccountName) ? storageAccountName : '${abbrs.storageStorageAccounts}${resourceToken}'
+    skuName: 'Standard_LRS'
     allowBlobPublicAccess: true
     dnsEndpointType: 'Standard'
     publicNetworkAccess:'Enabled'

@@ -49,6 +49,15 @@ var actualDatabaseName = !empty(cosmosDatabaseName) ? cosmosDatabaseName : defau
 module cosmos 'br/public:avm/res/document-db/database-account:0.6.0' = {
   name: 'cosmos-mongo'
   params: {
+    automaticFailover: false
+    backupPolicyType: 'Periodic'
+    backupIntervalInMinutes: 240
+    backupRetentionIntervalInHours: 8
+    backupStorageRedundancy: 'Local'
+    capabilitiesToAdd: [
+      'EnableServerless'
+    ]
+    enableFreeTier: true
     locations: [
       {
         failoverPriority: 0
