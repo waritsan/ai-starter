@@ -75,13 +75,17 @@ module api './app/api-appservice-avm.bicep' = {
       AZURE_COSMOS_DATABASE_NAME: cosmos.outputs.databaseName
       AZURE_KEY_VAULT_ENDPOINT:keyVault.outputs.uri
       AZURE_COSMOS_ENDPOINT: 'https://${cosmos.outputs.databaseName}.documents.azure.com:443/'
-      FUNCTIONS_EXTENSION_VERSION: '~4'
-      FUNCTIONS_WORKER_RUNTIME: 'python'
-      SCM_DO_BUILD_DURING_DEPLOYMENT: true
     }
     appInsightResourceId: monitoring.outputs.applicationInsightsResourceId
-    siteConfig: {
-      linuxFxVersion: 'python|3.10'
+    functionAppConfig: {
+      runtime: {
+        name: 'python'
+        version: '3.10'
+      }
+      scaleAndConcurrency: {
+        instanceMemoryMB: 2048
+        maximumInstanceCount: 100
+      }
     }
     allowedOrigins: [ webUri ]
     storageAccountResourceId: storage.outputs.resourceId
@@ -136,13 +140,12 @@ module appServicePlan 'br/public:avm/res/web/serverfarm:0.1.1' = {
   params: {
     name: !empty(appServicePlanName) ? appServicePlanName : '${abbrs.webServerFarms}${resourceToken}'
     sku: {
-      name: 'Y1'
-      tier: 'Dynamic'
+      name: 'FC1'
+      tier: 'FlexConsumption'
     }
     location: location
     tags: tags
     reserved: true
-    kind: 'Linux'
   }
 }
 
