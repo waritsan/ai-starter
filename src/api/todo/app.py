@@ -47,6 +47,30 @@ app = FastAPI(
     title="Simple Todo API",
     docs_url="/",
 )
+
+app.state.azure_openai = {
+    "enabled": settings.USE_AI_FOUNDRY,
+    "account_name": settings.AZURE_OPENAI_ACCOUNT_NAME,
+    "endpoint": settings.AZURE_OPENAI_ENDPOINT,
+    "chat_deployment": settings.AZURE_OPENAI_CHAT_DEPLOYMENT,
+}
+
+if settings.USE_AI_FOUNDRY:
+    missing_required_settings = [
+        setting_name
+        for setting_name, setting_value in {
+            "AZURE_OPENAI_ENDPOINT": settings.AZURE_OPENAI_ENDPOINT,
+            "AZURE_OPENAI_CHAT_DEPLOYMENT": settings.AZURE_OPENAI_CHAT_DEPLOYMENT,
+        }.items()
+        if not setting_value
+    ]
+
+    if missing_required_settings:
+        print(
+            "AI Foundry is enabled but missing required settings:",
+            ", ".join(missing_required_settings),
+        )
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=originList(),

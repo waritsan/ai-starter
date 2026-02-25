@@ -7,9 +7,10 @@ from beanie import PydanticObjectId
 from fastapi import HTTPException, Response
 from starlette.requests import Request
 
-from .app import app
-from .models import (CreateUpdateTodoItem, CreateUpdateTodoList, TodoItem,
-                     TodoList, TodoState)
+from .ai import generate_chat_completion
+from .app import app, settings
+from .models import (AIChatRequest, AIChatResponse, CreateUpdateTodoItem,
+                     CreateUpdateTodoList, TodoItem, TodoList, TodoState)
 
 
 @app.get("/lists", response_model=List[TodoList], response_model_by_alias=False)
@@ -191,3 +192,30 @@ async def delete_list_item(
     if not todo_item:
         raise HTTPException(status_code=404, detail="Todo item not found")
     await todo_item.delete()
+
+
+@app.post("/ai/chat", response_model=AIChatResponse)
+async def ai_chat(body: AIChatRequest) -> AIChatResponse:
+    if not settings.USE_AI_FOUNDRY:
+        raise HTTPException(status_code=503, detail="AI Foundry is not enabled")
+
+    if not settings.AZURE_OPENAI_ENDPOINT or not settings.AZURE_OPENAI_CHAT_DEPLOYMENT:
+        raise HTTPException(status_code=500, detail="Azure OpenAI configuration is missing")
+
+    try:
+        reply = generate_chat_completion(
+            endpoint=settings.AZURE_OPENAI_ENDPOINT,
+            deployment=settings.AZURE_OPENAI_CHAT_DEPLOYMENT,
+            api_version=settings.AZURE_OPENAI_API_VERSION,
+            user_prompt=body.prompt,
+            system_prompt=body.systemPrompt or "You are a helpful assistant.",
+            max_tokens=body.maxTokens or 300,
+            temperature=body.temperature if body.temperature is not None else 0.2,
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Azure OpenAI call failed: {str(exc)}") from exc
+
+    return AIChatResponse(
+        reply=reply,
+        deployment=settings.AZURE_OPENAI_CHAT_DEPLOYMENT,
+    )

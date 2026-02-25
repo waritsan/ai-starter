@@ -85,6 +85,11 @@ module api './app/api-appservice-avm.bicep' = {
       AZURE_COSMOS_DATABASE_NAME: cosmos.outputs.databaseName
       AZURE_KEY_VAULT_ENDPOINT:keyVault.outputs.uri
       AZURE_COSMOS_ENDPOINT: 'https://${cosmos.outputs.databaseName}.documents.azure.com:443/'
+      USE_AI_FOUNDRY: string(useAIFoundry)
+      AZURE_OPENAI_ACCOUNT_NAME: useAIFoundry ? aiFoundryAccountName : ''
+      AZURE_OPENAI_ENDPOINT: useAIFoundry ? 'https://${aiFoundryAccountName}.openai.azure.com/' : ''
+      AZURE_OPENAI_CHAT_DEPLOYMENT: useAIFoundry ? aiFoundryDeploymentName : ''
+      AZURE_OPENAI_API_VERSION: '2024-10-21'
     }
     appInsightResourceId: monitoring.outputs.applicationInsightsResourceId
     functionAppConfig: {
@@ -221,6 +226,13 @@ module aiFoundry 'br/public:avm/ptn/ai-ml/ai-foundry:0.6.0' = if (useAIFoundry) 
       location: location
       disableLocalAuth: true
       sku: 'S0'
+      roleAssignments: [
+        {
+          principalId: api.outputs.SERVICE_API_IDENTITY_PRINCIPAL_ID
+          principalType: 'ServicePrincipal'
+          roleDefinitionIdOrName: 'Cognitive Services OpenAI User'
+        }
+      ]
       project: {
         name: aiFoundryProjectName
       }
@@ -303,7 +315,7 @@ output API_BASE_URL string = useAPIM ? apimApi!.outputs.serviceApiUri : api.outp
 output REACT_APP_WEB_BASE_URL string = webUri
 output USE_APIM bool = useAPIM
 output USE_AI_FOUNDRY bool = useAIFoundry
-output AZURE_OPENAI_ACCOUNT_NAME string = useAIFoundry ? aiFoundry!.outputs.aiServicesName : ''
-output AZURE_OPENAI_ENDPOINT string = useAIFoundry ? 'https://${aiFoundry!.outputs.aiServicesName}.openai.azure.com/' : ''
+output AZURE_OPENAI_ACCOUNT_NAME string = useAIFoundry ? aiFoundryAccountName : ''
+output AZURE_OPENAI_ENDPOINT string = useAIFoundry ? 'https://${aiFoundryAccountName}.openai.azure.com/' : ''
 output AZURE_OPENAI_CHAT_DEPLOYMENT string = useAIFoundry ? aiFoundryDeploymentName : ''
 output SERVICE_API_ENDPOINTS array = useAPIM ? [ apimApi!.outputs.serviceApiUri, api.outputs.SERVICE_API_URI ]: []

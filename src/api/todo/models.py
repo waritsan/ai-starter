@@ -31,6 +31,11 @@ class Settings(BaseSettings):
     AZURE_KEY_VAULT_ENDPOINT: Optional[str] = None
     APPLICATIONINSIGHTS_CONNECTION_STRING: Optional[str] = None
     APPLICATIONINSIGHTS_ROLENAME: Optional[str] = "API"
+    USE_AI_FOUNDRY: bool = False
+    AZURE_OPENAI_ACCOUNT_NAME: Optional[str] = None
+    AZURE_OPENAI_ENDPOINT: Optional[str] = None
+    AZURE_OPENAI_CHAT_DEPLOYMENT: Optional[str] = None
+    AZURE_OPENAI_API_VERSION: str = "2024-10-21"
 
     class Config:
         env_file = ".env"
@@ -72,6 +77,18 @@ class CreateUpdateTodoItem(BaseModel):
     state: Optional[TodoState] = None
     dueDate: Optional[datetime] = None
     completedDate: Optional[datetime] = None
+
+
+class AIChatRequest(BaseModel):
+    prompt: str
+    systemPrompt: Optional[str] = "You are a helpful assistant."
+    maxTokens: Optional[int] = 300
+    temperature: Optional[float] = 0.2
+
+
+class AIChatResponse(BaseModel):
+    reply: str
+    deployment: str
 
 
 __beanie_models__ = [TodoList, TodoItem]
