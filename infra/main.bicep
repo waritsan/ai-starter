@@ -24,9 +24,16 @@ param resourceGroupName string = ''
 param storageAccountName string = ''
 param webServiceName string = ''
 param apimServiceName string = ''
+param aiFoundryModelName string = 'gpt-4o-mini'
+param aiFoundryModelVersion string = '2024-07-18'
+param aiFoundryDeploymentName string = 'chat'
+param aiFoundryDeploymentCapacity int = 1
 
 @description('Flag to use Azure API Management to mediate the calls between the Web frontend and the backend API')
 param useAPIM bool = false
+
+@description('Flag to deploy Azure AI Foundry (Azure OpenAI) resource and model deployment')
+param useAIFoundry bool = false
 
 @description('API Management SKU to use if APIM is enabled')
 param apimSku string = 'Consumption'
@@ -36,6 +43,9 @@ param principalId string = ''
 
 var abbrs = loadJsonContent('./abbreviations.json')
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
+var aiFoundryUniqueToken = substring(resourceToken, 0, 5)
+var aiFoundryAccountName = '${abbrs.cognitiveServicesAccounts}ai-${resourceToken}'
+var aiFoundryProjectName = '${abbrs.cognitiveServicesAccountsProjects}ai-${resourceToken}'
 var tags = { 'azd-env-name': environmentName }
 var webUri = 'https://${web.outputs.defaultHostname}'
 
@@ -197,6 +207,42 @@ module monitoring 'br/public:avm/ptn/azd/monitoring:0.1.0' = {
   }
 }
 
+// Creates Azure AI Foundry account + project with a cost-optimized LLM deployment
+module aiFoundry 'br/public:avm/ptn/ai-ml/ai-foundry:0.6.0' = if (useAIFoundry) {
+  name: 'aifoundry'
+  scope: rg
+  params: {
+    baseName: 'aif'
+    baseUniqueName: aiFoundryUniqueToken
+    location: location
+    includeAssociatedResources: false
+    aiFoundryConfiguration: {
+      accountName: aiFoundryAccountName
+      location: location
+      disableLocalAuth: true
+      sku: 'S0'
+      project: {
+        name: aiFoundryProjectName
+      }
+    }
+    aiModelDeployments: [
+      {
+        name: aiFoundryDeploymentName
+        model: {
+          format: 'OpenAI'
+          name: aiFoundryModelName
+          version: aiFoundryModelVersion
+        }
+        sku: {
+          name: 'Standard'
+          capacity: aiFoundryDeploymentCapacity
+        }
+      }
+    ]
+    tags: tags
+  }
+}
+
 // Creates Azure API Management (APIM) service to mediate the requests between the frontend and the backend API
 module apim 'br/public:avm/res/api-management/service:0.2.0' = if (useAPIM) {
   name: 'apim-deployment'
@@ -236,7 +282,7 @@ module apimApi 'br/public:avm/ptn/azd/apim-api:0.1.0' = if (useAPIM) {
     apiDisplayName: 'Simple Todo API'
     apiName: 'todo-api'
     apiPath: 'todo'
-    name: useAPIM ? apim.outputs.name : ''
+    name: useAPIM ? apim!.outputs.name : ''
     webFrontendUrl: webUri
     location: location
     apiAppName: api.outputs.SERVICE_API_NAME
@@ -253,7 +299,11 @@ output AZURE_KEY_VAULT_ENDPOINT string = keyVault.outputs.uri
 output AZURE_KEY_VAULT_NAME string = keyVault.outputs.name
 output AZURE_LOCATION string = location
 output AZURE_TENANT_ID string = tenant().tenantId
-output API_BASE_URL string = useAPIM ? apimApi.outputs.serviceApiUri : api.outputs.SERVICE_API_URI
+output API_BASE_URL string = useAPIM ? apimApi!.outputs.serviceApiUri : api.outputs.SERVICE_API_URI
 output REACT_APP_WEB_BASE_URL string = webUri
 output USE_APIM bool = useAPIM
-output SERVICE_API_ENDPOINTS array = useAPIM ? [ apimApi.outputs.serviceApiUri, api.outputs.SERVICE_API_URI ]: []
+output USE_AI_FOUNDRY bool = useAIFoundry
+output AZURE_OPENAI_ACCOUNT_NAME string = useAIFoundry ? aiFoundry!.outputs.aiServicesName : ''
+output AZURE_OPENAI_ENDPOINT string = useAIFoundry ? 'https://${aiFoundry!.outputs.aiServicesName}.openai.azure.com/' : ''
+output AZURE_OPENAI_CHAT_DEPLOYMENT string = useAIFoundry ? aiFoundryDeploymentName : ''
+output SERVICE_API_ENDPOINTS array = useAPIM ? [ apimApi!.outputs.serviceApiUri, api.outputs.SERVICE_API_URI ]: []

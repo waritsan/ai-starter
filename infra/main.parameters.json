@@ -16,6 +16,21 @@
     },
     "apimSku": {
       "value": "${APIM_SKU=Consumption}"
+    },
+    "useAIFoundry": {
+      "value": "${USE_AI_FOUNDRY=false}"
+    },
+    "aiFoundryModelName": {
+      "value": "${AI_FOUNDRY_MODEL_NAME=gpt-4o-mini}"
+    },
+    "aiFoundryModelVersion": {
+      "value": "${AI_FOUNDRY_MODEL_VERSION=2024-07-18}"
+    },
+    "aiFoundryDeploymentName": {
+      "value": "${AI_FOUNDRY_DEPLOYMENT_NAME=chat}"
+    },
+    "aiFoundryDeploymentCapacity": {
+      "value": "${AI_FOUNDRY_DEPLOYMENT_CAPACITY=1}"
     }
   }
 }

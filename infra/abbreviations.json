@@ -12,6 +12,7 @@
     "cdnProfiles": "cdnp-",
     "cdnProfilesEndpoints": "cdne-",
     "cognitiveServicesAccounts": "cog-",
+    "cognitiveServicesAccountsProjects": "proj-",
     "cognitiveServicesFormRecognizer": "cog-fr-",
     "cognitiveServicesTextAnalytics": "cog-ta-",
     "cognitiveServicesSpeech": "cog-sp-",
