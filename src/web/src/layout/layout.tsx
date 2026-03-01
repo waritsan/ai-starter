@@ -14,6 +14,7 @@ import { TodoItem, TodoList } from '../models';
 import { headerStackStyles, mainStackStyles, rootStackStyles, sidebarStackStyles } from '../ux/styles';
 import TodoItemDetailPane from '../components/todoItemDetailPane';
 import { bindActionCreators } from '../actions/actionCreators';
+import ChatBubble from '../components/chatBubble';
 
 const Layout: FC = (): ReactElement => {
     const navigate = useNavigate();
@@ -49,33 +50,36 @@ const Layout: FC = (): ReactElement => {
     }
 
     return (
-        <Stack styles={rootStackStyles}>
-            <Stack.Item styles={headerStackStyles}>
-                <Header></Header>
-            </Stack.Item>
-            <Stack horizontal grow={1}>
-                <Stack.Item styles={sidebarStackStyles}>
-                    <Sidebar
-                        selectedList={appContext.state.selectedList}
-                        lists={appContext.state.lists}
-                        onListCreate={onListCreated} />
+        <>
+            <Stack styles={rootStackStyles}>
+                <Stack.Item styles={headerStackStyles}>
+                    <Header></Header>
                 </Stack.Item>
-                <Stack.Item grow={1} styles={mainStackStyles}>
-                    <Routes>
-                        <Route path="/lists/:listId/items/:itemId" element={<HomePage />} />
-                        <Route path="/lists/:listId" element={<HomePage />} />
-                        <Route path="/lists" element={<HomePage />} />
-                        <Route path="/" element={<HomePage />} />
-                    </Routes>
-                </Stack.Item>
-                <Stack.Item styles={sidebarStackStyles}>
-                    <TodoItemDetailPane
-                        item={appContext.state.selectedItem}
-                        onEdit={onItemEdited}
-                        onCancel={onItemEditCancel} />
-                </Stack.Item>
+                <Stack horizontal grow={1}>
+                    <Stack.Item styles={sidebarStackStyles}>
+                        <Sidebar
+                            selectedList={appContext.state.selectedList}
+                            lists={appContext.state.lists}
+                            onListCreate={onListCreated} />
+                    </Stack.Item>
+                    <Stack.Item grow={1} styles={mainStackStyles}>
+                        <Routes>
+                            <Route path="/lists/:listId/items/:itemId" element={<HomePage />} />
+                            <Route path="/lists/:listId" element={<HomePage />} />
+                            <Route path="/lists" element={<HomePage />} />
+                            <Route path="/" element={<HomePage />} />
+                        </Routes>
+                    </Stack.Item>
+                    <Stack.Item styles={sidebarStackStyles}>
+                        <TodoItemDetailPane
+                            item={appContext.state.selectedItem}
+                            onEdit={onItemEdited}
+                            onCancel={onItemEditCancel} />
+                    </Stack.Item>
+                </Stack>
             </Stack>
-        </Stack>
+            <ChatBubble />
+        </>
     );
 }
 

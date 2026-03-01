@@ -5,18 +5,23 @@ import { createBrowserHistory } from 'history'
 import config from "../config";
 
 const plugin = new ReactPlugin();
-let applicationInsights: ApplicationInsights;
+let applicationInsights: ApplicationInsights | undefined;
 export const reactPlugin = plugin;
 
-export const getApplicationInsights = (): ApplicationInsights => {
+export const getApplicationInsights = (): ApplicationInsights | undefined => {
     const browserHistory = createBrowserHistory({ window: window });
     if (applicationInsights) {
         return applicationInsights;
     }
 
+    const connectionString = config.observability.connectionString?.trim();
+    if (!connectionString) {
+        return undefined;
+    }
+
     const ApplicationInsightsConfig: Snippet = {
         config: {
-            connectionString: config.observability.connectionString,
+            connectionString: connectionString,
             enableCorsCorrelation: true,
             distributedTracingMode: DistributedTracingModes.W3C, 
             extensions: [plugin],
@@ -38,8 +43,7 @@ export const getApplicationInsights = (): ApplicationInsights => {
             }
         });
     } catch(err) {
-        // TODO - proper logging for web
-        console.error("ApplicationInsights setup failed, ensure environment variable 'VITE_APPLICATIONINSIGHTS_CONNECTION_STRING' has been set.", err);
+        applicationInsights = undefined;
     }
 
     return applicationInsights;
